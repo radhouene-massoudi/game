@@ -1,5 +1,5 @@
 .clock-game {
-  max-width: 100%;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
   text-align: center;
@@ -48,15 +48,96 @@
   font-weight: bold;
 }
 
+.game-container {
+  position: relative;
+  margin: 20px auto;
+  width: min(90vw, 800px);
+  height: min(90vw, 800px);
+}
+
 .clock-face {
   position: relative;
-  width: min(90vw, 600px);
-  height: min(90vw, 600px);
-  margin: 20px auto;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.1);
   box-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(10px);
+}
+
+.clock-numbers {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.clock-number {
+  position: absolute;
+  font-size: 24px;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Position clock numbers */
+.number-12 { top: 5%; left: 50%; transform: translateX(-50%); }
+.number-1 { top: 10%; right: 25%; }
+.number-2 { top: 25%; right: 10%; }
+.number-3 { top: 50%; right: 5%; transform: translateY(-50%); }
+.number-4 { bottom: 25%; right: 10%; }
+.number-5 { bottom: 10%; right: 25%; }
+.number-6 { bottom: 5%; left: 50%; transform: translateX(-50%); }
+.number-7 { bottom: 10%; left: 25%; }
+.number-8 { bottom: 25%; left: 10%; }
+.number-9 { top: 50%; left: 5%; transform: translateY(-50%); }
+.number-10 { top: 25%; left: 10%; }
+.number-11 { top: 10%; left: 25%; }
+
+.pile {
+  position: absolute;
+  width: 100px;
+  height: 140px;
+  transform-origin: center;
+  transition: transform 0.3s ease;
+}
+
+.pile-label {
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 18px;
+  color: #fff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.cards-count {
+  position: absolute;
+  bottom: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 14px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.active-pile {
+  transform: scale(1.1);
+  z-index: 100;
+}
+
+.active-pile::after {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  border: 2px solid #3498db;
+  border-radius: 10px;
+  animation: pulse 1.5s infinite;
 }
 
 .clock-position {
@@ -273,15 +354,9 @@ button:hover {
   width: calc(min(90vw, 600px) * 0.15);
   height: calc(min(90vw, 600px) * 0.22);
   transform-origin: center;
-}
-
-.center-pile {
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 2;
-  width: calc(min(90vw, 600px) * 0.18);
-  height: calc(min(90vw, 600px) * 0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .card {
@@ -289,30 +364,102 @@ button:hover {
   width: 100%;
   height: 100%;
   transition: transform 0.3s ease;
-  perspective: 1000px;
+  transform-origin: center;
 }
 
-.card img, .card-back {
+/* Stack cards with slight offset */
+.pile .card:nth-child(1) { transform: translateY(0px); }
+.pile .card:nth-child(2) { transform: translateY(2px); }
+.pile .card:nth-child(3) { transform: translateY(4px); }
+.pile .card:nth-child(4) { transform: translateY(6px); }
+
+.carte {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transition: transform 0.3s ease;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+.carte img {
   width: 100%;
   height: 100%;
   object-fit: contain;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
-.card-back {
-  background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+.face-up .carte {
+  transform: rotateY(0deg);
 }
 
-.face-up {
-  z-index: 2;
+.face-down .carte {
+  transform: rotateY(180deg);
 }
 
-.face-down {
-  background: #2c3e50;
+/* Position piles in clock pattern with adjusted z-index */
+.position-1 { transform: translate(150%, -50%) rotate(30deg); z-index: 1; }
+.position-2 { transform: translate(130%, 0%) rotate(60deg); z-index: 2; }
+.position-3 { transform: translate(100%, 50%) rotate(90deg); z-index: 3; }
+.position-4 { transform: translate(50%, 80%) rotate(120deg); z-index: 4; }
+.position-5 { transform: translate(0%, 100%) rotate(150deg); z-index: 5; }
+.position-6 { transform: translate(-50%, 80%) rotate(180deg); z-index: 6; }
+.position-7 { transform: translate(-100%, 50%) rotate(210deg); z-index: 7; }
+.position-8 { transform: translate(-130%, 0%) rotate(240deg); z-index: 8; }
+.position-9 { transform: translate(-150%, -50%) rotate(270deg); z-index: 9; }
+.position-10 { transform: translate(-130%, -100%) rotate(300deg); z-index: 10; }
+.position-11 { transform: translate(-50%, -130%) rotate(330deg); z-index: 11; }
+.position-12 { transform: translate(50%, -130%) rotate(360deg); z-index: 12; }
+
+.center-pile {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 13;
 }
 
-/* Add these new styles */
+/* Active pile styling */
+.active-pile {
+  z-index: 20 !important;
+}
+
+.active-pile .card:last-child {
+  transform: translateY(-10px);
+  transition: transform 0.3s ease;
+}
+
+/* Card hover effect */
+.pile:hover .card:last-child {
+  transform: translateY(-15px);
+}
+
+/* Stack effect shadow */
+.pile::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  transform: translateY(8px);
+  z-index: -1;
+}
+
+/* Adjust card stacking for piles with multiple cards */
+.pile:not(:empty) {
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+.pile:not(:empty) .card {
+  position: absolute;
+  backface-visibility: hidden;
+}
+
 .game-intro {
   width: 90%;
   max-width: 500px;
@@ -338,11 +485,6 @@ button:hover {
 .game-intro li {
   margin: 8px 0;
   color: #ecf0f1;
-}
-
-.active-pile {
-  animation: pulse 1s infinite;
-  z-index: 3;
 }
 
 .game-stats {
@@ -399,4 +541,119 @@ button:hover {
   opacity: 0.7;
   cursor: not-allowed;
   background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+}
+
+.clock-background {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0.2;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.start-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.clock-image {
+  width: 300px;
+  height: 300px;
+  margin-bottom: 20px;
+}
+
+.game-info {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.kings-count {
+  font-size: 1.2em;
+  color: #e74c3c;
+  margin-bottom: 10px;
+}
+
+.game-rules {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.game-rules ul {
+  text-align: left;
+  list-style-type: none;
+  padding: 0;
+}
+
+.game-rules li {
+  margin: 10px 0;
+  padding-left: 20px;
+  position: relative;
+}
+
+.game-rules li:before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: #3498db;
+}
+
+/* Add animation for last few cards */
+.pile:not(:empty) {
+  transition: transform 0.3s ease;
+}
+
+.pile:not(:empty):hover {
+  transform: scale(1.1);
+}
+
+/* Add tension-building animation when few cards remain */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.active-pile:not(:empty) {
+  animation: pulse 1.5s infinite;
+}
+
+.game-over-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.game-over-content {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 30px;
+  border-radius: 15px;
+  text-align: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .pile {
+    width: 70px;
+    height: 98px;
+  }
+  
+  .clock-number {
+    font-size: 18px;
+  }
+  
+  .pile-label {
+    font-size: 14px;
+  }
 } 
