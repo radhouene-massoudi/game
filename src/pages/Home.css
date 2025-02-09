@@ -1,0 +1,124 @@
+.home-container {
+  min-height: 100vh;
+  background-color: #f5f6fa;
+}
+
+.home-nav {
+  background-color: white;
+  padding: 1rem 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.home-nav h1 {
+  color: #2c3e50;
+  margin: 0;
+}
+
+.nav-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.games-button,
+.logout-button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.games-button {
+  background-color: #3498db;
+  color: white;
+}
+
+.games-button:hover {
+  background-color: #2980b9;
+}
+
+.logout-button {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.logout-button:hover {
+  background-color: #c0392b;
+}
+
+.home-content {
+  max-width: 800px;
+  margin: 3rem auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.home-content h2 {
+  color: #2c3e50;
+  margin-bottom: 1rem;
+}
+
+.home-content p {
+  color: #7f8c8d;
+  margin-bottom: 2rem;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.action-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  border: none;
+  border-radius: 10px;
+  background-color: white;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 200px;
+}
+
+.action-button:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.button-icon {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.action-button.admin {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.action-button.admin:hover {
+  background-color: #27ae60;
+}
+
+@media (max-width: 768px) {
+  .home-nav {
+    padding: 1rem;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .action-buttons {
+    gap: 1rem;
+  }
+
+  .action-button {
+    width: 100%;
+  }
+} 
