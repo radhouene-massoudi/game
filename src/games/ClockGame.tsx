@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useContext } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import './ClockGame.css';
 
@@ -16,12 +16,41 @@ interface DeckResponse {
   success: boolean;
 }
 
+class GameTimer {
+  private timerId: number | null = null;
+  private startTime: number = 0;
+  private onTick: (elapsed: number) => void;
+
+  constructor(onTick: (elapsed: number) => void) {
+    this.onTick = onTick;
+  }
+
+  start() {
+    this.startTime = Date.now();
+    this.update();
+  }
+
+  private update = () => {
+    const currentTime = Date.now();
+    const elapsed = Math.floor((currentTime - this.startTime) / 1000);
+    this.onTick(elapsed);
+    this.timerId = requestAnimationFrame(this.update);
+  };
+
+  stop() {
+    if (this.timerId !== null) {
+      cancelAnimationFrame(this.timerId);
+      this.timerId = null;
+    }
+  }
+}
+
 const ClockGame = () => {
   const { user } = useAuth();
   const [deckId, setDeckId] = useState<string>('');
   const [currentCard, setCurrentCard] = useState<Card | null>(null);
   const [piles, setPiles] = useState<Card[][]>(() => Array(13).fill(null).map(() => []));
-  const [showCenterCard, setShowCenterCard] = useState(true);
+  const [showCenterCard, setShowCenterCard] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
   const [message, setMessage] = useState('');
   const [kingCount, setKingCount] = useState(0);
@@ -31,16 +60,8 @@ const ClockGame = () => {
   const [timeElapsed, setTimeElapsed] = useState(0);
   const [bestScore, setBestScore] = useState(0);
   const [showWelcome, setShowWelcome] = useState(true);
-
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (gameStarted && gameStatus === 'playing') {
-      timer = setInterval(() => {
-        setTimeElapsed(prev => prev + 1);
-      }, 1000);
-    }
-    return () => clearInterval(timer);
-  }, [gameStarted, gameStatus]);
+  const [currentPosition, setCurrentPosition] = useState<number | null>(null);
+  const [timer] = useState(() => new GameTimer((elapsed) => setTimeElapsed(elapsed)));
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -77,16 +98,22 @@ const ClockGame = () => {
     return null;
   };
 
+  // Obtenir une position aléatoire
+  const getRandomPosition = (): number => {
+    return Math.floor(Math.random() * 12);
+  };
+
   const startGame = async () => {
     const newDeckId = await initializeDeck();
     if (newDeckId) {
       const firstCard = await drawCard(newDeckId);
       if (firstCard) {
         setCurrentCard(firstCard);
-        setShowCenterCard(true);
-        setMessage('Cliquez sur la position correspondant à la valeur de la carte');
+        setCurrentPosition(12); // Première carte au centre
+        setMessage(`Carte ${firstCard.value} - Cliquez sur la position ${getCorrectPosition(firstCard.value) + 1}`);
         setGameStarted(true);
         setShowWelcome(false);
+        timer.start(); // Démarrer le timer
       }
     }
   };
@@ -103,8 +130,8 @@ const ClockGame = () => {
       setScore(prev => prev + moveScore);
       
       const newPiles = [...piles];
-      setShowCenterCard(false);
       newPiles[pileIndex].push(currentCard);
+      setPiles(newPiles);
 
       if (cardValue === 'KING') {
         setKingCount(prev => {
@@ -112,38 +139,28 @@ const ClockGame = () => {
           if (newCount === 4) {
             setGameStatus('won');
             setMessage('Félicitations ! Vous avez gagné !');
+            timer.stop(); // Arrêter le timer quand le jeu est gagné
           }
           return newCount;
         });
       }
 
-      // Tirer la prochaine carte
+      // Tirer la prochaine carte et la placer à la position du clic
       const nextCard = await drawCard(deckId);
       if (nextCard) {
         setCurrentCard(nextCard);
-        setShowCenterCard(true);
-        setMessage('Cliquez sur la position correspondant à la valeur de la carte');
+        setCurrentPosition(pileIndex); // La nouvelle carte apparaît où on vient de cliquer
+        setMessage(`Carte ${nextCard.value} - Cliquez sur la position ${getCorrectPosition(nextCard.value) + 1}`);
       } else {
         setCurrentCard(null);
-        setShowCenterCard(false);
+        setCurrentPosition(null);
         setGameStatus('won');
         setMessage('Félicitations ! Vous avez terminé le jeu !');
+        timer.stop(); // Arrêter le timer quand le jeu est gagné
       }
-
-      setPiles(newPiles);
-
-      // Ajouter la classe pour l'animation
-      const element = document.querySelector(`.pile-${pileIndex}`);
-      element?.classList.add('correct-position');
-      setTimeout(() => element?.classList.remove('correct-position'), 1000);
     } else {
       setScore(prev => Math.max(0, prev - 10));
-      setMessage('Position incorrecte ! Essayez une autre position.');
-      
-      // Animation pour mauvaise position
-      const element = document.querySelector(`.pile-${pileIndex}`);
-      element?.classList.add('wrong-position');
-      setTimeout(() => element?.classList.remove('wrong-position'), 500);
+      setMessage(`Position incorrecte ! La carte ${cardValue} doit aller en position ${correctPosition + 1}`);
     }
   };
 
@@ -220,17 +237,6 @@ const ClockGame = () => {
                 ))}
               </div>
               
-              {/* Afficher la carte au centre seulement si showCenterCard est true */}
-              {currentCard && showCenterCard && (
-                <div className="current-card">
-                  <img 
-                    src={currentCard.image}
-                    alt={`${currentCard.value} of ${currentCard.suit}`}
-                    className="carte"
-                  />
-                </div>
-              )}
-              
               {/* Positions des cartes */}
               {Array(13).fill(null).map((_, index) => (
                 <div
@@ -239,18 +245,25 @@ const ClockGame = () => {
                              ${piles[index]?.length > 0 ? 'has-cards' : ''}`}
                   onClick={() => handlePileClick(index)}
                 >
-                  <div 
-                    className="pile-label"
-                    data-position={index === 12 ? 'K' : index + 1}
-                  >
+                  <div className="pile-label">
                     {index === 12 ? 'K' : index + 1}
                   </div>
-                  {/* Afficher la dernière carte placée */}
+
+                  {/* Afficher la carte courante si elle est à cette position */}
+                  {currentCard && currentPosition === index && (
+                    <img 
+                      src={currentCard.image}
+                      alt={`${currentCard.value} of ${currentCard.suit}`}
+                      className="carte current"
+                    />
+                  )}
+                  
+                  {/* Afficher la pile de cartes placées */}
                   {piles[index]?.length > 0 && (
                     <img 
                       src={piles[index][piles[index].length - 1].image}
                       alt={`${piles[index][piles[index].length - 1].value} of ${piles[index][piles[index].length - 1].suit}`}
-                      className="carte"
+                      className="carte placed"
                     />
                   )}
                 </div>
