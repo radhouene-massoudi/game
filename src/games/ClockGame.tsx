@@ -130,7 +130,7 @@ const ClockGame = () => {
       setScore(prev => prev + moveScore);
       
       const newPiles = [...piles];
-      newPiles[pileIndex].push(currentCard);
+      newPiles[pileIndex] = [currentCard];
       setPiles(newPiles);
 
       if (cardValue === 'KING') {
@@ -139,7 +139,7 @@ const ClockGame = () => {
           if (newCount === 4) {
             setGameStatus('won');
             setMessage('Félicitations ! Vous avez gagné !');
-            timer.stop(); // Arrêter le timer quand le jeu est gagné
+            timer.stop();
           }
           return newCount;
         });
@@ -249,21 +249,21 @@ const ClockGame = () => {
                     {index === 12 ? 'K' : index + 1}
                   </div>
 
-                  {/* Afficher la carte courante si elle est à cette position */}
+                  {/* Afficher la carte placée si il n'y a pas de carte courante à cette position */}
+                  {piles[index]?.length > 0 && currentPosition !== index && (
+                    <img 
+                      src={piles[index][piles[index].length - 1].image}
+                      alt={`${piles[index][piles[index].length - 1].value} of ${piles[index][piles[index].length - 1].suit}`}
+                      className="carte placed"
+                    />
+                  )}
+
+                  {/* Afficher la carte courante si elle existe à cette position */}
                   {currentCard && currentPosition === index && (
                     <img 
                       src={currentCard.image}
                       alt={`${currentCard.value} of ${currentCard.suit}`}
                       className="carte current"
-                    />
-                  )}
-                  
-                  {/* Afficher la pile de cartes placées */}
-                  {piles[index]?.length > 0 && (
-                    <img 
-                      src={piles[index][piles[index].length - 1].image}
-                      alt={`${piles[index][piles[index].length - 1].value} of ${piles[index][piles[index].length - 1].suit}`}
-                      className="carte placed"
                     />
                   )}
                 </div>
