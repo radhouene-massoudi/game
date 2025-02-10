@@ -9,15 +9,25 @@ interface AuthContextType {
   logout: () => void;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType>({
+  user: null,
+  isAuthenticated: false,
+  isLoading: true,
+  login: () => false,
+  logout: () => {},
+});
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+interface AuthProviderProps {
+  children: React.ReactNode;
+}
+
+export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     try {
-      const storedUser = localStorage.getItem('user');
+      const storedUser = sessionStorage.getItem('user');
       if (storedUser) {
         setUser(JSON.parse(storedUser));
       }
@@ -31,28 +41,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = (email: string, password: string): boolean => {
     const foundUser = users.find(u => u.email === email && u.password === password);
     if (foundUser) {
+      sessionStorage.setItem('user', JSON.stringify(foundUser));
       setUser(foundUser);
-      localStorage.setItem('user', JSON.stringify(foundUser));
       return true;
     }
     return false;
   };
 
   const logout = () => {
+    sessionStorage.removeItem('user');
     setUser(null);
-    localStorage.removeItem('user');
-  };
-
-  const value = {
-    user,
-    isAuthenticated: !!user,
-    isLoading,
-    login,
-    logout
+    setIsLoading(false);
+    window.location.replace('/');
   };
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{ 
+      user, 
+      isAuthenticated: !!user, 
+      isLoading, 
+      login, 
+      logout 
+    }}>
       {children}
     </AuthContext.Provider>
   );
